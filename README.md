@@ -1,13 +1,15 @@
-
 # Bioinformatics Coursework
 
-Assignments from *Introduction to Bioinformatics* (University of Tehran). The work uses public databases and web tools (ClinVar, NCBI, Clustal Omega, BLAST, AlphaFold DB, SWISS-MODEL) together with short Python and R scripts.
+Assignments from *Introduction to Bioinformatics* (University of Tehran). The work uses public databases and web tools (ClinVar, NCBI, Clustal Omega, BLAST, AlphaFold DB, SWISS-MODEL) together with Python, R and command-line tools (SPAdes, QUAST, BWA, samtools).
+
+- [Assignment 1: SNP analysis, comparative genomics and protein structure of *ATP7B*](#assignment-1-snp-analysis-comparative-genomics-and-protein-structure-of-atp7b)
+- [Assignment 2: Read mapping and genome assembly of a *Klebsiella pneumoniae* phage](#assignment-2-read-mapping-and-genome-assembly-of-a-klebsiella-pneumoniae-phage)
 
 ## Assignment 1: SNP analysis, comparative genomics and protein structure of *ATP7B*
 
 **Gene:** *ATP7B*, a copper-transporting ATPase. Mutations in this gene cause Wilson's disease.
 
-Folder: [`assignment-1-atp7b`](assignment-1-atp7b) | Full write-up: [`Bioinformatics assignment 2.pdf`](assignment-1-atp7b/report/assignment-1-report.pdf)
+Folder: [`assignment-1-atp7b`](assignment-1-atp7b) | Full write-up: [`report/assignment-1-report.pdf`](assignment-1-atp7b/report/assignment-1-report.pdf)
 
 ### 1. SNPs from ClinVar
 
@@ -54,6 +56,68 @@ AlphaFold/ColabFold was not available, so structures were built with SWISS-MODEL
 
 pLDDT and Ramachandran values are as recorded in the report. TM-align was also unavailable, so isoform c was superimposed on isoform a with PDBeFold (SSM): Q-score 0.409, RMSD 0.789 Å over 931 aligned residues, 98.5% sequence identity. The Q-score is PDBeFold's own measure and is not the same as the TM-score.
 
+## Assignment 2: Read mapping and genome assembly of a *Klebsiella pneumoniae* phage
+
+Short-read whole-genome sequencing data of a *Klebsiella pneumoniae* phage (SRA accession [SRR36584168](https://www.ncbi.nlm.nih.gov/sra/SRR36584168)) is checked for quality, assembled de novo, and mapped to a reference genome. Parts B and C were run in Google Colab.
+
+Folder: [`assignment-2-read-mapping-assembly`](assignment-2-read-mapping-assembly)
+
+### Part A: Data and quality control
+
+The reads were downloaded with `fastq-dump` from the SRA Toolkit. The questions about the file were answered in R with ShortRead, Biostrings and ggplot2 ([`scripts/part_a_analysis.R`](assignment-2-read-mapping-assembly/scripts/part_a_analysis.R)), and the quality control plots were made in Python because FastQC was not available. Screenshots and plots are in [`results/part_a`](assignment-2-read-mapping-assembly/results/part_a).
+
+| Question | Result |
+|---|---|
+| Number of reads | 2,421,219 |
+| First read | `SRR36584168.1 A01757:294:HFYJGDRX7:2:2101:2826:1000 length=251` |
+| Occurrences of `GCGATCAACTCGCTGG` | 7,499 |
+| Read length | Most reads are 250 to 251 bp (mean 244 bp), with very few shorter than 200 bp |
+| Quality per read | Mean Phred score peaks at Q36 to Q37, and very few reads fall below Q30 |
+| Quality along the read | 36.6 at the start of the read, falling gently to about 35 at position 250 |
+
+In the first 1,000 reads (saved in [`first_1000_reads.fastq`](assignment-2-read-mapping-assembly/results/part_a/first_1000_reads.fastq)) the base qualities take only three values (Q11, Q25 and Q37), which is why the box plot looks flat. Quality is high throughout, and the slight drop towards the 3' end is typical of Illumina chemistry. Trimming the read ends would be an option for sensitive analyses.
+
+### Part B: De novo assembly
+
+The reads were assembled with SPAdes 3.13.1 as single-end reads (`--careful`, automatic k-mer selection).
+
+| | Contigs | Scaffolds |
+|---|---|---|
+| Sequences | 54 | 50 |
+| Total length | 149,588 bp | 149,988 bp |
+| Largest | 30,788 bp | 30,788 bp |
+| N50 | 8,023 bp | 16,944 bp |
+| Sequences of at least 1 kb | 19 | 15 |
+
+The contigs fall into two groups by k-mer coverage: three large contigs have about 5,000 to 6,600x coverage, while the others have roughly 6 to 17x.
+
+### Part C: Read mapping
+
+The reads were mapped to the reference provided by the instructor (32 sequences, about 139 kb in total) with BWA-MEM, then the SAM file was converted to a sorted, indexed BAM file with samtools.
+
+| Metric | Result |
+|---|---|
+| Primary reads | 2,421,219 |
+| Primary reads mapped | 2,419,790 (99.94%) |
+| Supplementary alignments | 7,897 |
+
+- **IGV:** a 195 bp window on sequence `k141_9` ([screenshot](assignment-2-read-mapping-assembly/results/mapping/igv_k141_9_193-387.png)) shows the read stack with a few mismatches and short deletions.
+- **CIGAR strings:** interpretations of `29S21=1X25=`, `20M2I1M1D10M` and `5M10N25M` are in [`cigar_interpretation.md`](assignment-2-read-mapping-assembly/results/mapping/cigar_interpretation.md).
+- The FASTQ, SAM and BAM files are too large for GitHub and are not included, and the reference genome is course material and is not included either.
+
+### Commands
+
+```
+fastq-dump SRR36584168
+spades.py -s SRR36584168.fastq -o spades_output --careful -t 4 --memory 8
+bwa index reference.fasta
+bwa mem -t 4 -R '@RG\tID:phage\tSM:Klebsiella_phage\tLB:lib1\tPL:ILLUMINA' reference.fasta SRR36584168.fastq > aligned_reads.sam
+samtools view -bS aligned_reads.sam > aligned_reads.bam
+samtools sort aligned_reads.bam -o aligned_reads_sorted.bam
+samtools index aligned_reads_sorted.bam
+samtools flagstat aligned_reads_sorted.bam
+```
+
 ## Repository layout
 
 ```
@@ -65,6 +129,13 @@ assignment-1-atp7b/
 │   ├── blast/       BLASTp hit table and subject protein sequence
 │   └── structures/  SWISS-MODEL and AlphaFold PDB files, Ramachandran plot
 └── report/     PDF report with screenshots and discussion
+
+assignment-2-read-mapping-assembly/
+├── scripts/    part_a_analysis.R
+└── results/
+    ├── part_a/     screenshots, quality plots, first 1000 reads
+    ├── assembly/   SPAdes contigs, scaffolds and log
+    └── mapping/    flagstat summary, IGV screenshot, CIGAR interpretation
 ```
 
 ## Run the scripts
@@ -78,4 +149,4 @@ Set your own email in `Entrez.email` first. For the R script, install `msa`, `Bi
 
 ## Notes
 
-Course assignments for Introduction to Bioinformatics, University of Tehran, Fall 2025.
+Course assignments for Introduction to Bioinformatics, University of Tehran, 2025 to 2026. Assignment 2 was completed as a group project.
