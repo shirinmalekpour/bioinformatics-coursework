@@ -1,0 +1,12 @@
+# blastp
+# Iteration: 0
+# Query: NP_001393441.1 copper-transporting ATPase 2 isoform a [Homo sapiens]
+# RID: HY1RAVJP114
+# Database: n/a
+# Fields: query acc.ver, subject acc.ver, % identity, alignment length, mismatches, gap opens, q. start, q. end, s. start, s. end, evalue, bit score, % positives
+# 3 hits found
+NP_001393441.1	NP_001230111.1	86.411	1332	143	5	140	1465	55	1354	0.0	2427	89.04
+NP_001393441.1	NP_001230111.1	61.750	583	132	11	1	555	1	520	0.0	677	68.61
+NP_001393441.1	NP_001230111.1	37.500	64	40	0	64	127	459	522	5.49e-10	51.4	57.81
+
+
