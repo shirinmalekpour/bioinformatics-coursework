@@ -9,7 +9,7 @@ Assignments from *Introduction to Bioinformatics* (University of Tehran). The wo
 
 **Gene:** *ATP7B*, a copper-transporting ATPase. Mutations in this gene cause Wilson's disease.
 
-Folder: [`assignment-1-atp7b`](assignment-1-atp7b) | Full write-up: [`report/assignment-1-report.pdf`](assignment-1-atp7b/report/assignment-1-report.pdf)
+Folder: [`assignment-1-atp7b`](assignment-1-atp7b) | Full write-up: [`Bioinformatics assignment 2.pdf`](assignment-1-atp7b/report/assignment-1-report.pdf)
 
 ### 1. SNPs from ClinVar
 
