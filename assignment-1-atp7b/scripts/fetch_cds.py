@@ -10,7 +10,7 @@ import sys
 
 from Bio import Entrez, SeqIO
 
-Entrez.email = "your.email@example.com"  # replace with your own address
+Entrez.email = "shirin.malelpou@gmail.com"  # replace with your own address
 
 
 def fetch_cds_sequence(refseq_id):
